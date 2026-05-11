@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useCallback } from "react";
 import {
   FunctionDefinition,
@@ -17,6 +18,7 @@ import FunctionTemplateInput from "@/components/FunctionTemplateInput";
 import IntervalInput from "@/components/IntervalInput";
 import TargetSelection from "@/components/TargetSelection";
 import ResultPanel from "@/components/ResultPanel";
+import StartupSplash from "@/components/StartupSplash";
 
 const MODES: { id: SolverMode; label: string; available: boolean }[] = [
   { id: "optimize", label: "函数最值", available: true },
@@ -103,10 +105,26 @@ export default function SolverPage() {
 
   return (
     <div className="min-h-screen">
+      <StartupSplash />
+
       <header className="bg-primary text-white">
         <div className="max-w-5xl mx-auto px-4 py-6">
-          <h1 className="text-2xl sm:text-3xl font-bold">MathGA Solver</h1>
-          <p className="text-white/80 mt-1">遗传算法数学数值求解器</p>
+          <div className="flex items-center gap-3">
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-white shadow-sm shadow-primary-dark/20">
+              <Image
+                src="/mathga-icon-192.png"
+                alt=""
+                width={42}
+                height={42}
+                priority
+                className="rounded-lg"
+              />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold">MathGA Solver</h1>
+              <p className="text-white/80 mt-1">遗传算法数学数值求解器</p>
+            </div>
+          </div>
         </div>
       </header>
 

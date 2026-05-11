@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/mathga-icon-192.png" alt="MathGA Solver 图标" width="120" height="120">
+</p>
+
 # MathGA Solver
 
 基于遗传算法的浏览器端数学数值求解器，面向高中及以下数学问题。
