@@ -26,7 +26,7 @@ npm install
 npm run dev
 ```
 
-浏览器打开 http://localhost:3000 即可使用。
+浏览器打开 http://localhost:3185 即可使用。
 
 ## 脚本
 
