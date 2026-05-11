@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --color-primary: #0D9488;
+  --color-primary-dark: #0F766E;
+  --color-secondary: #14B8A6;
+  --color-cta: #F97316;
+  --color-cta-dark: #EA580C;
+  --color-bg: #F0FDFA;
+  --color-bg-card: #FFFFFF;
+  --color-text: #134E4A;
+  --color-text-muted: #5F9EA0;
+  --color-border: #CCFBF1;
+  --color-error: #DC2626;
+  --color-warning: #D97706;
+  --color-success: #059669;
+}
+
+@theme inline {
+  --color-primary: var(--color-primary);
+  --color-primary-dark: var(--color-primary-dark);
+  --color-secondary: var(--color-secondary);
+  --color-cta: var(--color-cta);
+  --color-cta-dark: var(--color-cta-dark);
+  --color-bg: var(--color-bg);
+  --color-bg-card: var(--color-bg-card);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-border: var(--color-border);
+  --color-error: var(--color-error);
+  --color-warning: var(--color-warning);
+  --color-success: var(--color-success);
+  --font-sans: 'Baloo 2', sans-serif;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Baloo 2', sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}
+
+/* 统一下拉列表样式 */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23134E4A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+}
+
+select option {
+  background-color: var(--color-bg-card);
+  color: var(--color-text);
+  padding: 0.5rem 0.75rem;
+}
