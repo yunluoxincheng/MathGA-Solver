@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MathGA Solver
 
-## Getting Started
+基于遗传算法的浏览器端数学数值求解器，面向高中及以下数学问题。
 
-First, run the development server:
+## 功能
+
+- **函数最值求解** — 在指定区间上求函数的最大值、最小值
+- **模板化输入** — 内置 9 种函数模板（线性、二次、三次、反比例、绝对值、正弦、余弦、根号、自定义表达式）
+- **开闭区间** — 支持开区间、闭区间、半开区间，端点接近时自动警告
+- **π 单位** — 三角函数可切换 π 单位输入与结果显示
+- **纯前端计算** — 所有计算在浏览器本地完成，无需后端
+
+> 结果为遗传算法数值近似解，非精确解析解。
+
+## 技术栈
+
+- Next.js 16 (App Router) + TypeScript
+- Tailwind CSS v4
+- mathjs（表达式编译与安全求值）
+- Jest（测试）
+
+## 快速开始
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+浏览器打开 http://localhost:3000 即可使用。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 脚本
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| 命令 | 说明 |
+|------|------|
+| `npm run dev` | 启动开发服务器 |
+| `npm run build` | 生产构建 |
+| `npm run test` | 运行测试 |
+| `npm run typecheck` | 类型检查 |
+| `npm run lint` | ESLint 检查 |
 
-## Learn More
+## 项目结构
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── components/     UI 组件（模板选择、区间输入、结果展示）
+├── lib/
+│   ├── ga/         遗传算法核心（选择、交叉、变异、精英保留）
+│   ├── math/       数学工具（表达式编译、区间处理、验证）
+│   └── solvers/    求解器（最值优化）
+├── types/          TypeScript 类型定义
+└── app/            Next.js 页面与全局样式
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 许可
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
