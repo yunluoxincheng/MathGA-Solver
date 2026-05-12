@@ -46,6 +46,12 @@ export interface OptimizationResult {
   generations: number;
   earlyStopped: boolean;
   warnings: string[];
+  qualitativeResult?: {
+    title: string;
+    description: string;
+    xLabel?: string;
+    fxLabel?: string;
+  };
 }
 
 export interface Individual {

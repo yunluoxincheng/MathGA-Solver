@@ -63,25 +63,42 @@ export default function ResultPanel({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-text-muted">近似 x 值</p>
+              <p className="text-sm text-text-muted">
+                {result.qualitativeResult ? "趋近方式" : "近似 x 值"}
+              </p>
               <p className="text-xl font-bold text-primary">
-                {formatXValue(result.bestX, piUnit)}
+                {result.qualitativeResult?.xLabel ?? formatXValue(result.bestX, piUnit)}
               </p>
             </div>
             <div>
-              <p className="text-sm text-text-muted">近似 f(x) 值</p>
+              <p className="text-sm text-text-muted">
+                {result.qualitativeResult ? "函数趋势" : "近似 f(x) 值"}
+              </p>
               <p className="text-xl font-bold text-cta">
-                {formatNumber(result.bestFx)}
+                {result.qualitativeResult?.fxLabel ?? formatNumber(result.bestFx)}
               </p>
             </div>
           </div>
 
-          <div className="mt-3 pt-3 border-t border-border/50 flex flex-wrap gap-3 text-xs text-text-muted">
-            <span>迭代次数: {result.generations}</span>
-            {result.earlyStopped && (
-              <span className="text-success">已提前收敛</span>
-            )}
-          </div>
+          {result.qualitativeResult && (
+            <div className="mt-3 px-3 py-2 bg-primary/5 border border-primary/10 rounded-md">
+              <p className="text-sm font-semibold text-primary">
+                {result.qualitativeResult.title}
+              </p>
+              <p className="text-sm text-text-muted mt-1">
+                {result.qualitativeResult.description}
+              </p>
+            </div>
+          )}
+
+          {!result.qualitativeResult && (
+            <div className="mt-3 pt-3 border-t border-border/50 flex flex-wrap gap-3 text-xs text-text-muted">
+              <span>迭代次数: {result.generations}</span>
+              {result.earlyStopped && (
+                <span className="text-success">已提前收敛</span>
+              )}
+            </div>
+          )}
 
           {result.warnings.length > 0 && (
             <div className="mt-3 px-3 py-2 bg-warning/10 border border-warning/20 rounded-md">

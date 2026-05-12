@@ -98,4 +98,39 @@ describe("optimizer - endpoint-sensitive functions", () => {
     expect(results[1].bestX).toBeCloseTo(-1);
     expect(results[1].bestFx).toBeCloseTo(-1);
   });
+
+  it("reports no finite maximum when reciprocal approaches zero from the right", () => {
+    const compiled = compileExpression("1/x", "x");
+    const interval = { left: 0, right: 5, includeLeft: false, includeRight: true };
+
+    const results = optimize(compiled, interval, "max", SMALL_CONFIG);
+
+    expect(results[0].qualitativeResult?.title).toBe("无有限最大值");
+    expect(results[0].qualitativeResult?.xLabel).toBe("x → 0+");
+    expect(results[0].qualitativeResult?.fxLabel).toBe("f(x) → +∞");
+    expect(results[0].generations).toBe(0);
+  });
+
+  it("reports no finite minimum when reciprocal approaches zero from the left", () => {
+    const compiled = compileExpression("1/x", "x");
+    const interval = { left: -5, right: 0, includeLeft: true, includeRight: false };
+
+    const results = optimize(compiled, interval, "min", SMALL_CONFIG);
+
+    expect(results[0].qualitativeResult?.title).toBe("无有限最小值");
+    expect(results[0].qualitativeResult?.xLabel).toBe("x → 0-");
+    expect(results[0].qualitativeResult?.fxLabel).toBe("f(x) → -∞");
+  });
+
+  it("detects interior reciprocal asymptote for crossed intervals", () => {
+    const compiled = compileExpression("1/x", "x");
+    const interval = { left: -5, right: 5, includeLeft: true, includeRight: true };
+
+    const results = optimize(compiled, interval, "both", SMALL_CONFIG);
+
+    expect(results[0].qualitativeResult?.title).toBe("无有限最大值");
+    expect(results[0].qualitativeResult?.xLabel).toBe("x → 0+");
+    expect(results[1].qualitativeResult?.title).toBe("无有限最小值");
+    expect(results[1].qualitativeResult?.xLabel).toBe("x → 0-");
+  });
 });
