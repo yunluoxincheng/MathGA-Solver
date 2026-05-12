@@ -41,6 +41,7 @@ export default function EvolutionChart({ result }: EvolutionChartProps) {
     generation: gen.generation,
     bestFitness: Number.isFinite(gen.bestFitness) ? gen.bestFitness : undefined,
     avgFitness: Number.isFinite(gen.avgFitness) ? gen.avgFitness : undefined,
+    bestX: Number.isFinite(gen.bestX) ? gen.bestX : undefined,
   }));
 
   const targetLabel = result.target === "max" ? "最大值" : "最小值";
@@ -63,8 +64,29 @@ export default function EvolutionChart({ result }: EvolutionChartProps) {
             width={60}
           />
           <Tooltip
-            formatter={(value) => formatValue(Number(value))}
-            labelFormatter={(label) => `第 ${label} 代`}
+            content={({ active, payload, label }) => {
+              if (!active || !payload || payload.length === 0) return null;
+              const entry = payload[0]?.payload;
+              return (
+                <div className="bg-bg-card border border-border rounded-lg px-3 py-2 shadow-lg text-xs">
+                  <p className="font-semibold mb-1">第 {label} 代</p>
+                  {entry?.bestX !== undefined && (
+                    <p>
+                      <span className="text-text-muted">最优 x = </span>
+                      <span className="font-mono">{formatValue(entry.bestX)}</span>
+                    </p>
+                  )}
+                  {payload.map((p, i) => (
+                    <p key={i}>
+                      <span className="text-text-muted">
+                        {p.dataKey === "bestFitness" ? "最优 f(x) = " : "平均 f(x) = "}
+                      </span>
+                      <span className="font-mono">{formatValue(Number(p.value))}</span>
+                    </p>
+                  ))}
+                </div>
+              );
+            }}
           />
           <Legend
             formatter={(value: string) =>

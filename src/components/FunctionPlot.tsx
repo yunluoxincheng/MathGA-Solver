@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Interval, OptimizationResult } from "@/types";
 import { sampleFunction } from "@/lib/math/sample";
-import { formatEndpoint, normalizeDisplayZero } from "@/lib/math/interval";
+import { formatEndpoint, formatRadiansAsPi, normalizeDisplayZero } from "@/lib/math/interval";
 
 interface FunctionPlotProps {
   evaluator: (x: number) => number | null;
@@ -33,6 +33,13 @@ interface FiniteMarker {
   type: "max" | "min";
 }
 
+interface TooltipState {
+  cx: number;
+  cy: number;
+  lines: { label: string; value: string }[];
+  align: "left" | "right";
+}
+
 export default function FunctionPlot({
   evaluator,
   interval,
@@ -40,6 +47,12 @@ export default function FunctionPlot({
   results,
   piUnit,
 }: FunctionPlotProps) {
+  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+
+  function formatXValue(n: number): string {
+    return piUnit ? formatRadiansAsPi(n) : formatValue(n);
+  }
+
   const finiteMarkers = useMemo<FiniteMarker[]>(() => {
     return results
       .filter(
@@ -99,9 +112,15 @@ export default function FunctionPlot({
   const leftLabel = piUnit ? formatEndpoint(leftEndpoint, true) : formatEndpoint(leftEndpoint);
   const rightLabel = piUnit ? formatEndpoint(rightEndpoint, true) : formatEndpoint(rightEndpoint);
 
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  const leftPct = tooltip ? (tooltip.cx / SVG_WIDTH) * 100 : 0;
+  const topPct = tooltip ? (tooltip.cy / SVG_HEIGHT) * 100 : 0;
+
   return (
-    <div className="w-full">
+    <div className="w-full relative">
       <svg
+        ref={svgRef}
         viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
         className="w-full h-auto"
         style={{ maxHeight: 320 }}
@@ -206,14 +225,24 @@ export default function FunctionPlot({
         {(() => {
           const leftFx = evaluator(interval.left);
           if (leftFx !== null && Number.isFinite(leftFx)) {
-            return renderEndpointIndicator(mapX(interval.left), mapY(leftFx), interval.includeLeft);
+            return renderEndpointIndicator(
+              mapX(interval.left), mapY(leftFx), interval.includeLeft,
+              "左端点", interval.left, leftFx,
+              mapX(interval.left) > SVG_WIDTH / 2 ? "right" : "left",
+              setTooltip, formatXValue
+            );
           }
           return null;
         })()}
         {(() => {
           const rightFx = evaluator(interval.right);
           if (rightFx !== null && Number.isFinite(rightFx)) {
-            return renderEndpointIndicator(mapX(interval.right), mapY(rightFx), interval.includeRight);
+            return renderEndpointIndicator(
+              mapX(interval.right), mapY(rightFx), interval.includeRight,
+              "右端点", interval.right, rightFx,
+              mapX(interval.right) > SVG_WIDTH / 2 ? "right" : "left",
+              setTooltip, formatXValue
+            );
           }
           return null;
         })()}
@@ -256,6 +285,20 @@ export default function FunctionPlot({
               fill={m.type === "max" ? "var(--color-cta, #f59e0b)" : "var(--color-primary, #6366f1)"}
               stroke="white"
               strokeWidth={1.5}
+              className="cursor-pointer"
+              onMouseEnter={() => {
+                setTooltip({
+                  cx: mapX(m.x),
+                  cy: mapY(m.y),
+                  lines: [
+                    { label: m.type === "max" ? "最大值点" : "最小值点", value: "" },
+                    { label: "x = ", value: formatXValue(m.x) },
+                    { label: "f(x) = ", value: formatValue(m.y) },
+                  ],
+                  align: mapX(m.x) > SVG_WIDTH / 2 ? "right" : "left",
+                });
+              }}
+              onMouseLeave={() => setTooltip(null)}
             />
             <text
               x={mapX(m.x) + 8}
@@ -269,6 +312,31 @@ export default function FunctionPlot({
           </g>
         ))}
       </svg>
+
+      {/* HTML tooltip overlay — same style as EvolutionChart */}
+      {tooltip && (
+        <div
+          className="absolute pointer-events-none z-10 bg-bg-card border border-border rounded-lg px-3 py-2 shadow-lg text-xs whitespace-nowrap"
+          style={{
+            left: `${leftPct}%`,
+            top: `${topPct}%`,
+            transform: tooltip.align === "right"
+              ? "translate(-100%, -110%)"
+              : "translate(-50%, -110%)",
+          }}
+        >
+          {tooltip.lines.map((line, i) =>
+            line.value ? (
+              <p key={i}>
+                <span className="text-text-muted">{line.label}</span>
+                <span className="font-mono">{line.value}</span>
+              </p>
+            ) : (
+              <p key={i} className="font-semibold mb-0.5">{line.label}</p>
+            )
+          )}
+        </div>
+      )}
 
       {/* Interval label */}
       <div className="flex justify-between text-xs text-text-muted mt-1 px-1">
@@ -329,14 +397,39 @@ function axisPositionForZero(
 function renderEndpointIndicator(
   cx: number,
   baseline: number,
-  included: boolean
+  included: boolean,
+  label: string,
+  xVal: number,
+  fxVal: number,
+  align: "left" | "right",
+  setTooltip?: (t: TooltipState | null) => void,
+  formatXValue?: (n: number) => string
 ) {
+  const handleEnter = () => {
+    if (!setTooltip || !formatXValue) return;
+    setTooltip({
+      cx,
+      cy: baseline,
+      lines: [
+        { label: `${label}（${included ? "包含" : "不包含"}）`, value: "" },
+        { label: "x = ", value: formatXValue(xVal) },
+        { label: "f(x) = ", value: formatValue(fxVal) },
+      ],
+      align,
+    });
+  };
+
+  const circleProps = {
+    cx,
+    cy: baseline,
+    r: 4,
+    className: "cursor-pointer" as const,
+    onMouseEnter: handleEnter,
+    onMouseLeave: () => setTooltip?.(null),
+  };
+
   if (included) {
-    return (
-      <circle cx={cx} cy={baseline} r={3} fill="currentColor" opacity={0.5} />
-    );
+    return <circle {...circleProps} fill="currentColor" opacity={0.6} />;
   }
-  return (
-    <circle cx={cx} cy={baseline} r={3} fill="none" stroke="currentColor" strokeWidth={1.5} opacity={0.5} />
-  );
+  return <circle {...circleProps} fill="none" stroke="currentColor" strokeWidth={1.5} opacity={0.6} />;
 }
