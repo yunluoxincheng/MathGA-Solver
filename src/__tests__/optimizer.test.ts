@@ -172,3 +172,93 @@ describe("optimizer - endpoint-sensitive functions", () => {
     expect(results[1].qualitativeResult?.xLabel).toBe("x → 0-");
   });
 });
+
+describe("optimizer - history propagation", () => {
+  const compiled = compileExpression("x^2 - 4*x + 3", "x");
+  const interval = { left: 0, right: 5, includeLeft: true, includeRight: true };
+
+  it("includes generation history for finite GA-backed results", () => {
+    const results = optimize(compiled, interval, "min", SMALL_CONFIG);
+    const minResult = results[0];
+
+    expect(minResult.history).toBeDefined();
+    expect(minResult.history!.length).toBeGreaterThan(0);
+    expect(minResult.history![0].generation).toBe(1);
+    expect(typeof minResult.history![0].bestFitness).toBe("number");
+    expect(typeof minResult.history![0].avgFitness).toBe("number");
+  });
+
+  it("includes history for both targets independently", () => {
+    const results = optimize(compiled, interval, "both", SMALL_CONFIG);
+
+    expect(results[0].history).toBeDefined();
+    expect(results[1].history).toBeDefined();
+    expect(results[0].history!.length).toBeGreaterThan(0);
+    expect(results[1].history!.length).toBeGreaterThan(0);
+  });
+});
+
+describe("optimizer - endpoint correction", () => {
+  const tinyConfig: GAConfig = {
+    populationSize: 4,
+    generations: 1,
+    crossoverRate: 0,
+    mutationRate: 0,
+    eliteCount: 1,
+    tolerance: 1e-8,
+    patience: 5,
+  };
+
+  it("records endpoint correction when right included endpoint beats GA best for max", () => {
+    const compiled = compileExpression("x^2", "x");
+    const interval = { left: 0, right: 10, includeLeft: true, includeRight: true };
+    const results = optimize(compiled, interval, "max", tinyConfig);
+
+    expect(results[0].bestX).toBe(10);
+    expect(results[0].bestFx).toBe(100);
+    expect(results[0].endpointCorrection).toBeDefined();
+    expect(results[0].endpointCorrection!.x).toBe(10);
+    expect(results[0].endpointCorrection!.fx).toBe(100);
+  });
+
+  it("records endpoint correction when left included endpoint beats GA best for min", () => {
+    const compiled = compileExpression("x^2", "x");
+    const interval = { left: 0, right: 10, includeLeft: true, includeRight: true };
+    const results = optimize(compiled, interval, "min", tinyConfig);
+
+    expect(results[0].bestX).toBe(0);
+    expect(results[0].bestFx).toBe(0);
+    expect(results[0].endpointCorrection).toBeDefined();
+    expect(results[0].endpointCorrection!.x).toBe(0);
+    expect(results[0].endpointCorrection!.fx).toBe(0);
+  });
+
+  it("does not record endpoint correction when GA finds interior optimum", () => {
+    const compiled = compileExpression("-(x - 5)^2 + 10", "x");
+    const interval = { left: 0, right: 10, includeLeft: true, includeRight: true };
+    const results = optimize(compiled, interval, "max", SMALL_CONFIG);
+
+    expect(results[0].bestX).toBeGreaterThan(1);
+    expect(results[0].bestX).toBeLessThan(9);
+    expect(results[0].endpointCorrection).toBeUndefined();
+  });
+});
+
+describe("optimizer - qualitative results have no history", () => {
+  it("unbounded results have no history", () => {
+    const compiled = compileExpression("1/x", "x");
+    const interval = { left: 0, right: 5, includeLeft: false, includeRight: true };
+    const results = optimize(compiled, interval, "max", SMALL_CONFIG);
+
+    expect(results[0].qualitativeResult).toBeDefined();
+    expect(results[0].history).toBeUndefined();
+  });
+
+  it("excluded endpoint limit results have no history", () => {
+    const compiled = compileExpression("x", "x");
+    const interval = { left: 0, right: 10, includeLeft: true, includeRight: false };
+    const results = optimize(compiled, interval, "max", SMALL_CONFIG);
+
+    expect(results[0].qualitativeResult).toBeDefined();
+  });
+});

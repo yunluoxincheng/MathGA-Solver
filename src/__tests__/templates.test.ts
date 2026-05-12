@@ -1,4 +1,4 @@
-import { buildExpression, buildPreview, getAllTemplates } from "@/lib/math/templates";
+import { buildExpression, buildPreview, getAllTemplates, getTemplate } from "@/lib/math/templates";
 
 describe("Template metadata", () => {
   it("returns all 9 template types", () => {
@@ -12,6 +12,12 @@ describe("Template metadata", () => {
       expect(typeof t.buildExpression).toBe("function");
       expect(typeof t.buildPreview).toBe("function");
     });
+  });
+
+  it("marks non-degenerate template parameters as non-zero", () => {
+    expect(getTemplate("quadratic").parameters.find((p) => p.name === "a")?.nonZero).toBe(true);
+    expect(getTemplate("reciprocal").parameters.find((p) => p.name === "a")?.nonZero).toBe(true);
+    expect(getTemplate("sine").parameters.find((p) => p.name === "b")?.nonZero).toBe(true);
   });
 });
 
@@ -53,5 +59,10 @@ describe("buildPreview", () => {
   it("renders sqrt template", () => {
     const preview = buildPreview("sqrt", { a: 1, b: 0 }, "x");
     expect(preview).toContain("√x");
+  });
+
+  it("renders negative trig coefficients in standard form", () => {
+    const preview = buildPreview("sine", { a: -1, b: -1, c: 1, d: 0 }, "x");
+    expect(preview).toBe("-sin(-x + 1)");
   });
 });

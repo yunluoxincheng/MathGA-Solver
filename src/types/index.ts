@@ -52,6 +52,11 @@ export interface OptimizationResult {
     xLabel?: string;
     fxLabel?: string;
   };
+  history?: GenerationStats[];
+  endpointCorrection?: {
+    x: number;
+    fx: number;
+  };
 }
 
 export interface Individual {
@@ -89,4 +94,14 @@ export interface TemplateParameter {
   name: string;
   label: string;
   defaultValue: number;
+  nonZero?: boolean;
+}
+
+export interface VisualizationSnapshot {
+  compiledFn: (x: number) => number | null;
+  solvedInterval: Interval;
+  displayInterval: Interval;
+  piUnit: boolean;
+  expression: string;
+  results: OptimizationResult[];
 }

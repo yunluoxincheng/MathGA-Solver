@@ -248,11 +248,14 @@ function solveSingle(
   const warnings: string[] = [];
   if (validity.warning) warnings.push(validity.warning);
 
+  let endpointCorrection: { x: number; fx: number } | undefined;
+
   if (interval.includeLeft) {
     const leftFx = compiledFn.evaluate(interval.left);
     if (leftFx !== null) {
       const currentBest = gaResult.best.fitness;
       if (minimize ? leftFx < currentBest : leftFx > currentBest) {
+        endpointCorrection = { x: interval.left, fx: leftFx };
         gaResult.best = { x: interval.left, fitness: leftFx };
       }
     }
@@ -263,6 +266,7 @@ function solveSingle(
     if (rightFx !== null) {
       const currentBest = gaResult.best.fitness;
       if (minimize ? rightFx < currentBest : rightFx > currentBest) {
+        endpointCorrection = { x: interval.right, fx: rightFx };
         gaResult.best = { x: interval.right, fitness: rightFx };
       }
     }
@@ -296,6 +300,8 @@ function solveSingle(
     generations: gaResult.generations,
     earlyStopped: gaResult.earlyStopped,
     warnings,
+    history: gaResult.history,
+    endpointCorrection,
   };
 }
 

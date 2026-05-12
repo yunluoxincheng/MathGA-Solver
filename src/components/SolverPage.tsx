@@ -8,6 +8,7 @@ import {
   OptimizeTarget,
   OptimizationResult,
   SolverMode,
+  VisualizationSnapshot,
   DEFAULT_GA_CONFIG,
 } from "@/types";
 import { buildExpression } from "@/lib/math/templates";
@@ -51,6 +52,7 @@ export default function SolverPage() {
   const [resultPiUnit, setResultPiUnit] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [vizSnapshot, setVizSnapshot] = useState<VisualizationSnapshot | null>(null);
   const isTrigTemplate = fnDef.templateId === "sine" || fnDef.templateId === "cosine";
 
   const handleFunctionChange = useCallback((nextFnDef: FunctionDefinition) => {
@@ -62,7 +64,6 @@ export default function SolverPage() {
 
   const handleSolve = useCallback(() => {
     setError(null);
-    setResults([]);
 
     const intervalValidation = validateInterval(interval);
     if (!intervalValidation.valid) {
@@ -95,6 +96,14 @@ export default function SolverPage() {
         const res = optimize(compiled, solvingInterval, target, DEFAULT_GA_CONFIG);
         setResultPiUnit(piUnit);
         setResults(res);
+        setVizSnapshot({
+          compiledFn: compiled.evaluate,
+          solvedInterval: solvingInterval,
+          displayInterval: interval,
+          piUnit,
+          expression,
+          results: res,
+        });
       } catch (e) {
         setError(e instanceof Error ? e.message : "求解过程出错");
       } finally {
@@ -193,6 +202,7 @@ export default function SolverPage() {
                 loading={loading}
                 error={error}
                 piUnit={resultPiUnit}
+                vizSnapshot={vizSnapshot}
               />
             </section>
           </div>

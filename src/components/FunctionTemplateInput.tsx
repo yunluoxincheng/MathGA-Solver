@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FunctionDefinition, FunctionTemplateId, VariableName } from "@/types";
+import { FunctionDefinition, FunctionTemplateId, TemplateParameter, VariableName } from "@/types";
 import { getAllTemplates, buildPreview } from "@/lib/math/templates";
 
 interface FunctionTemplateInputProps {
@@ -49,9 +49,10 @@ export default function FunctionTemplateInput({
     if (raw !== "" && raw !== "-") {
       const num = parseFloat(raw);
       if (!isNaN(num)) {
+        const param = currentTemplate?.parameters.find((p) => p.name === name);
         onChange({
           ...value,
-          parameters: { ...value.parameters, [name]: num },
+          parameters: { ...value.parameters, [name]: normalizeTemplateParam(num, param) },
         });
       }
     }
@@ -59,11 +60,15 @@ export default function FunctionTemplateInput({
 
   function handleParamBlur(name: string) {
     const raw = paramRawValues[name];
-    if (raw === "" || raw === "-") {
-      setParamRawValues((prev) => ({ ...prev, [name]: "0" }));
+    const param = currentTemplate?.parameters.find((p) => p.name === name);
+    const parsed = raw === undefined || raw === "" || raw === "-" ? NaN : parseFloat(raw);
+    const normalized = normalizeTemplateParam(parsed, param);
+
+    if (!Number.isFinite(parsed) || parsed !== normalized) {
+      setParamRawValues((prev) => ({ ...prev, [name]: String(normalized) }));
       onChange({
         ...value,
-        parameters: { ...value.parameters, [name]: 0 },
+        parameters: { ...value.parameters, [name]: normalized },
       });
     }
   }
@@ -175,6 +180,18 @@ export default function FunctionTemplateInput({
       </div>
     </div>
   );
+}
+
+function normalizeTemplateParam(num: number, param?: TemplateParameter): number {
+  if (!Number.isFinite(num)) {
+    return param?.nonZero ? param.defaultValue || 1 : 0;
+  }
+
+  if (param?.nonZero && num === 0) {
+    return param.defaultValue || 1;
+  }
+
+  return num;
 }
 
 interface StyledSelectOption {

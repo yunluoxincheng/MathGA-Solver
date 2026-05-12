@@ -6,7 +6,7 @@ const TEMPLATES: Record<FunctionTemplateId, TemplateMetadata> = {
     label: "一次函数 (ax + b)",
     friendlyPreview: "ax + b",
     parameters: [
-      { name: "a", label: "a", defaultValue: 1 },
+      { name: "a", label: "a (≠0)", defaultValue: 1, nonZero: true },
       { name: "b", label: "b", defaultValue: 0 },
     ],
     buildExpression: (params, v) => {
@@ -26,7 +26,7 @@ const TEMPLATES: Record<FunctionTemplateId, TemplateMetadata> = {
     label: "二次函数 (ax² + bx + c)",
     friendlyPreview: "ax² + bx + c",
     parameters: [
-      { name: "a", label: "a", defaultValue: 1 },
+      { name: "a", label: "a (≠0)", defaultValue: 1, nonZero: true },
       { name: "b", label: "b", defaultValue: 0 },
       { name: "c", label: "c", defaultValue: 0 },
     ],
@@ -49,7 +49,7 @@ const TEMPLATES: Record<FunctionTemplateId, TemplateMetadata> = {
     label: "三次函数 (ax³ + bx² + cx + d)",
     friendlyPreview: "ax³ + bx² + cx + d",
     parameters: [
-      { name: "a", label: "a", defaultValue: 1 },
+      { name: "a", label: "a (≠0)", defaultValue: 1, nonZero: true },
       { name: "b", label: "b", defaultValue: 0 },
       { name: "c", label: "c", defaultValue: 0 },
       { name: "d", label: "d", defaultValue: 0 },
@@ -80,7 +80,7 @@ const TEMPLATES: Record<FunctionTemplateId, TemplateMetadata> = {
     label: "反比例函数 (a/x)",
     friendlyPreview: "a/x",
     parameters: [
-      { name: "a", label: "a", defaultValue: 1 },
+      { name: "a", label: "a (≠0)", defaultValue: 1, nonZero: true },
     ],
     buildExpression: (params, v) => {
       const a = params.a ?? 1;
@@ -97,7 +97,7 @@ const TEMPLATES: Record<FunctionTemplateId, TemplateMetadata> = {
     label: "绝对值函数 (a|x| + b)",
     friendlyPreview: "a|x| + b",
     parameters: [
-      { name: "a", label: "a", defaultValue: 1 },
+      { name: "a", label: "a (≠0)", defaultValue: 1, nonZero: true },
       { name: "b", label: "b", defaultValue: 0 },
     ],
     buildExpression: (params, v) => {
@@ -117,8 +117,8 @@ const TEMPLATES: Record<FunctionTemplateId, TemplateMetadata> = {
     label: "正弦函数 (a·sin(bx + c) + d)",
     friendlyPreview: "a·sin(bx + c) + d",
     parameters: [
-      { name: "a", label: "a", defaultValue: 1 },
-      { name: "b", label: "b", defaultValue: 1 },
+      { name: "a", label: "a (≠0)", defaultValue: 1, nonZero: true },
+      { name: "b", label: "b (≠0)", defaultValue: 1, nonZero: true },
       { name: "c", label: "c", defaultValue: 0 },
       { name: "d", label: "d", defaultValue: 0 },
     ],
@@ -134,9 +134,9 @@ const TEMPLATES: Record<FunctionTemplateId, TemplateMetadata> = {
       const b = params.b ?? 1;
       const c = params.c ?? 0;
       const d = params.d ?? 0;
-      const inner = b === 1 ? v : `${b}${v}`;
+      const inner = formatInnerCoeff(b, v);
       const withC = c === 0 ? inner : `${inner}${formatSignedConst(c)}`;
-      const trig = a === 1 ? `sin(${withC})` : `${a}·sin(${withC})`;
+      const trig = formatFunctionScale(a, `sin(${withC})`);
       return joinTerms([trig, formatConst(d)]);
     },
   },
@@ -146,8 +146,8 @@ const TEMPLATES: Record<FunctionTemplateId, TemplateMetadata> = {
     label: "余弦函数 (a·cos(bx + c) + d)",
     friendlyPreview: "a·cos(bx + c) + d",
     parameters: [
-      { name: "a", label: "a", defaultValue: 1 },
-      { name: "b", label: "b", defaultValue: 1 },
+      { name: "a", label: "a (≠0)", defaultValue: 1, nonZero: true },
+      { name: "b", label: "b (≠0)", defaultValue: 1, nonZero: true },
       { name: "c", label: "c", defaultValue: 0 },
       { name: "d", label: "d", defaultValue: 0 },
     ],
@@ -163,9 +163,9 @@ const TEMPLATES: Record<FunctionTemplateId, TemplateMetadata> = {
       const b = params.b ?? 1;
       const c = params.c ?? 0;
       const d = params.d ?? 0;
-      const inner = b === 1 ? v : `${b}${v}`;
+      const inner = formatInnerCoeff(b, v);
       const withC = c === 0 ? inner : `${inner}${formatSignedConst(c)}`;
-      const trig = a === 1 ? `cos(${withC})` : `${a}·cos(${withC})`;
+      const trig = formatFunctionScale(a, `cos(${withC})`);
       return joinTerms([trig, formatConst(d)]);
     },
   },
@@ -175,7 +175,7 @@ const TEMPLATES: Record<FunctionTemplateId, TemplateMetadata> = {
     label: "平方根函数 (a√x + b)",
     friendlyPreview: "a√x + b",
     parameters: [
-      { name: "a", label: "a", defaultValue: 1 },
+      { name: "a", label: "a (≠0)", defaultValue: 1, nonZero: true },
       { name: "b", label: "b", defaultValue: 0 },
     ],
     buildExpression: (params, v) => {
@@ -221,6 +221,18 @@ function formatSignedConst(val: number): string {
   if (val === 0) return "";
   if (val > 0) return ` + ${val}`;
   return ` - ${Math.abs(val)}`;
+}
+
+function formatInnerCoeff(coeff: number, variable: string): string {
+  if (coeff === 1) return variable;
+  if (coeff === -1) return `-${variable}`;
+  return `${coeff}${variable}`;
+}
+
+function formatFunctionScale(coeff: number, expression: string): string {
+  if (coeff === 1) return expression;
+  if (coeff === -1) return `-${expression}`;
+  return `${coeff}·${expression}`;
 }
 
 function joinTerms(terms: string[]): string {
