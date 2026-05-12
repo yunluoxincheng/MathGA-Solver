@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Interval } from "@/types";
 import { formatEndpoint, validateInterval } from "@/lib/math/interval";
 
@@ -18,6 +19,8 @@ export default function IntervalInput({
   piUnit = false,
   onPiUnitChange,
 }: IntervalInputProps) {
+  const [leftRaw, setLeftRaw] = useState<string | null>(null);
+  const [rightRaw, setRightRaw] = useState<string | null>(null);
   const validation = validateInterval(value);
 
   return (
@@ -61,10 +64,18 @@ export default function IntervalInput({
             id="left-endpoint"
             type="number"
             step="any"
-            value={value.left}
+            value={leftRaw ?? value.left}
             onChange={(e) => {
-              const num = parseFloat(e.target.value);
+              const raw = e.target.value;
+              setLeftRaw(raw);
+              const num = parseFloat(raw);
               if (!isNaN(num)) onChange({ ...value, left: num });
+            }}
+            onBlur={() => {
+              if (leftRaw === "" || leftRaw === "-") {
+                setLeftRaw("0");
+                onChange({ ...value, left: 0 });
+              }
             }}
             className="w-full border border-border rounded-lg px-3 py-2 bg-bg-card text-text
               focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors duration-200"
@@ -81,10 +92,18 @@ export default function IntervalInput({
             id="right-endpoint"
             type="number"
             step="any"
-            value={value.right}
+            value={rightRaw ?? value.right}
             onChange={(e) => {
-              const num = parseFloat(e.target.value);
+              const raw = e.target.value;
+              setRightRaw(raw);
+              const num = parseFloat(raw);
               if (!isNaN(num)) onChange({ ...value, right: num });
+            }}
+            onBlur={() => {
+              if (rightRaw === "" || rightRaw === "-") {
+                setRightRaw("0");
+                onChange({ ...value, right: 0 });
+              }
             }}
             className="w-full border border-border rounded-lg px-3 py-2 bg-bg-card text-text
               focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors duration-200"

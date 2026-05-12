@@ -19,6 +19,7 @@ export default function FunctionTemplateInput({
   onChange,
 }: FunctionTemplateInputProps) {
   const [openSelect, setOpenSelect] = useState<"template" | "variable" | null>(null);
+  const [paramRawValues, setParamRawValues] = useState<Record<string, string>>({});
   const templates = getAllTemplates();
   const currentTemplate = templates.find((t) => t.id === value.templateId);
   const preview = buildPreview(
@@ -34,6 +35,7 @@ export default function FunctionTemplateInput({
     template.parameters.forEach((p) => {
       params[p.name] = p.defaultValue;
     });
+    setParamRawValues({});
     onChange({
       ...value,
       templateId,
@@ -43,11 +45,27 @@ export default function FunctionTemplateInput({
   }
 
   function handleParamChange(name: string, raw: string) {
-    const num = raw === "" || raw === "-" ? 0 : parseFloat(raw);
-    onChange({
-      ...value,
-      parameters: { ...value.parameters, [name]: isNaN(num) ? 0 : num },
-    });
+    setParamRawValues((prev) => ({ ...prev, [name]: raw }));
+    if (raw !== "" && raw !== "-") {
+      const num = parseFloat(raw);
+      if (!isNaN(num)) {
+        onChange({
+          ...value,
+          parameters: { ...value.parameters, [name]: num },
+        });
+      }
+    }
+  }
+
+  function handleParamBlur(name: string) {
+    const raw = paramRawValues[name];
+    if (raw === "" || raw === "-") {
+      setParamRawValues((prev) => ({ ...prev, [name]: "0" }));
+      onChange({
+        ...value,
+        parameters: { ...value.parameters, [name]: 0 },
+      });
+    }
   }
 
   function handleVariableChange(variable: VariableName) {
@@ -137,8 +155,9 @@ export default function FunctionTemplateInput({
                   id={`param-${p.name}`}
                   type="number"
                   step="any"
-                  value={value.parameters[p.name] ?? p.defaultValue}
+                  value={paramRawValues[p.name] ?? String(value.parameters[p.name] ?? p.defaultValue)}
                   onChange={(e) => handleParamChange(p.name, e.target.value)}
+                  onBlur={() => handleParamBlur(p.name)}
                   className="w-full border border-border rounded-lg px-3 py-2 bg-bg-card text-text
                     focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors duration-200"
                 />
