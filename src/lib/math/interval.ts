@@ -77,13 +77,15 @@ export function applyPiUnit(interval: Interval): Interval {
 }
 
 export function formatEndpoint(value: number, piUnit = false): string {
+  const normalizedValue = normalizeDisplayZero(value, 5e-5);
+
   if (piUnit) {
-    return formatPiCoefficient(value);
+    return formatPiCoefficient(normalizedValue);
   }
 
-  if (value === 0) return "0";
+  if (normalizedValue === 0) return "0";
 
-  const multiple = value / Math.PI;
+  const multiple = normalizedValue / Math.PI;
   const roundedMultiple = Math.round(multiple);
   if (Math.abs(multiple - roundedMultiple) < 1e-10) {
     if (roundedMultiple === 1) return "π";
@@ -91,20 +93,28 @@ export function formatEndpoint(value: number, piUnit = false): string {
     return `${roundedMultiple}π`;
   }
 
-  return Number.isInteger(value) ? String(value) : value.toFixed(4).replace(/\.?0+$/, "");
+  return Number.isInteger(normalizedValue)
+    ? String(normalizedValue)
+    : normalizedValue.toFixed(4).replace(/\.?0+$/, "");
 }
 
 export function formatRadiansAsPi(value: number): string {
-  return formatPiCoefficient(value / Math.PI);
+  return formatPiCoefficient(normalizeDisplayZero(value / Math.PI, 5e-5));
 }
 
 function formatPiCoefficient(value: number): string {
-  if (value === 0) return "0";
-  if (value === 1) return "π";
-  if (value === -1) return "-π";
+  const normalizedValue = normalizeDisplayZero(value, 5e-5);
 
-  const displayValue = Number.isInteger(value)
-    ? String(value)
-    : value.toFixed(4).replace(/\.?0+$/, "");
+  if (normalizedValue === 0) return "0";
+  if (normalizedValue === 1) return "π";
+  if (normalizedValue === -1) return "-π";
+
+  const displayValue = Number.isInteger(normalizedValue)
+    ? String(normalizedValue)
+    : normalizedValue.toFixed(4).replace(/\.?0+$/, "");
   return `${displayValue}π`;
+}
+
+export function normalizeDisplayZero(value: number, tolerance = 1e-10): number {
+  return Math.abs(value) < tolerance ? 0 : value;
 }

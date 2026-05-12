@@ -110,9 +110,20 @@ describe("π interval helpers", () => {
     expect(formatEndpoint(1.5, true)).toBe("1.5π");
   });
 
+  it("normalizes negative zero in endpoint display", () => {
+    expect(formatEndpoint(-0)).toBe("0");
+    expect(formatEndpoint(-0.00004)).toBe("0");
+    expect(formatEndpoint(-0, true)).toBe("0");
+  });
+
   it("formats solved radian x values as π multiples", () => {
     expect(formatRadiansAsPi(Math.PI)).toBe("π");
     expect(formatRadiansAsPi(1.5 * Math.PI)).toBe("1.5π");
     expect(formatRadiansAsPi(-0.5 * Math.PI)).toBe("-0.5π");
+  });
+
+  it("normalizes negative zero in π result display", () => {
+    expect(formatRadiansAsPi(-0)).toBe("0");
+    expect(formatRadiansAsPi(-0.00004 * Math.PI)).toBe("0");
   });
 });

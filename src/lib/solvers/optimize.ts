@@ -1,7 +1,7 @@
 import { GAConfig, Interval, OptimizeTarget, OptimizationResult, DEFAULT_GA_CONFIG } from "@/types";
 import { CompiledFunction } from "@/lib/math/evaluate";
 import { runGA } from "@/lib/ga/engine";
-import { isNearEndpoint } from "@/lib/math/interval";
+import { isNearEndpoint, normalizeDisplayZero } from "@/lib/math/interval";
 
 type ApproachSide = "left" | "right";
 
@@ -9,6 +9,12 @@ interface UnboundedBehavior {
   point: number;
   side: ApproachSide;
   direction: "positive" | "negative";
+}
+
+interface ExcludedEndpointLimit {
+  point: number;
+  side: ApproachSide;
+  value: number;
 }
 
 function checkPopulationValidity(
@@ -137,8 +143,81 @@ function createUnboundedResult(
   };
 }
 
+function detectExcludedEndpointLimit(
+  compiledFn: CompiledFunction,
+  interval: Interval,
+  currentBest: number,
+  minimize: boolean
+): ExcludedEndpointLimit | null {
+  const endpointLimits: ExcludedEndpointLimit[] = [];
+
+  if (!interval.includeLeft) {
+    const leftFx = compiledFn.evaluate(interval.left);
+    if (leftFx !== null) {
+      endpointLimits.push({ point: interval.left, side: "right", value: leftFx });
+    }
+  }
+
+  if (!interval.includeRight) {
+    const rightFx = compiledFn.evaluate(interval.right);
+    if (rightFx !== null) {
+      endpointLimits.push({ point: interval.right, side: "left", value: rightFx });
+    }
+  }
+
+  const unattainedLimits = endpointLimits.filter((limit) =>
+    isMeaningfullyBetter(limit.value, currentBest, minimize)
+  );
+
+  if (unattainedLimits.length === 0) return null;
+
+  return unattainedLimits.sort((a, b) =>
+    minimize ? a.value - b.value : b.value - a.value
+  )[0];
+}
+
+function isMeaningfullyBetter(candidate: number, currentBest: number, minimize: boolean): boolean {
+  return minimize ? candidate < currentBest : candidate > currentBest;
+}
+
+function createExcludedEndpointLimitResult(
+  limit: ExcludedEndpointLimit,
+  minimize: boolean,
+  generations: number,
+  earlyStopped: boolean,
+  warnings: string[]
+): OptimizationResult {
+  const targetName = minimize ? "最小值" : "最大值";
+  const boundName = minimize ? "下确界" : "上确界";
+  const sideLabel = limit.side === "right" ? "右侧" : "左侧";
+  const approachSymbol = limit.side === "right" ? "+" : "-";
+  const pointLabel = formatPoint(limit.point);
+  const valueLabel = formatPoint(limit.value);
+
+  return {
+    target: minimize ? "min" : "max",
+    bestX: NaN,
+    bestFx: limit.value,
+    generations,
+    earlyStopped,
+    warnings: [
+      ...warnings,
+      `区间不包含 x = ${pointLabel}，函数只能从${sideLabel}趋近该端点，因此不存在真正的${targetName}。`,
+    ],
+    qualitativeResult: {
+      title: `无${targetName}`,
+      description: `当 x 从${sideLabel}趋近 ${pointLabel} 时，f(x) 趋近 ${valueLabel}。该值是${boundName}，但不在当前区间内取到。`,
+      xLabel: `x → ${pointLabel}${approachSymbol}`,
+      fxLabel: `f(x) → ${valueLabel}`,
+    },
+  };
+}
+
 function formatPoint(value: number): string {
-  return Number.isInteger(value) ? value.toString() : value.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+  const normalizedValue = normalizeDisplayZero(value, 5e-7);
+  return Number.isInteger(normalizedValue)
+    ? normalizedValue.toString()
+    : normalizedValue.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
 }
 
 function solveSingle(
@@ -187,6 +266,22 @@ function solveSingle(
         gaResult.best = { x: interval.right, fitness: rightFx };
       }
     }
+  }
+
+  const endpointLimit = detectExcludedEndpointLimit(
+    compiledFn,
+    interval,
+    gaResult.best.fitness,
+    minimize
+  );
+  if (endpointLimit) {
+    return createExcludedEndpointLimitResult(
+      endpointLimit,
+      minimize,
+      gaResult.generations,
+      gaResult.earlyStopped,
+      warnings
+    );
   }
 
   const endpointCheck = isNearEndpoint(gaResult.best.x, interval);

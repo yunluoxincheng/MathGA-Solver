@@ -45,14 +45,52 @@ describe("optimizer - quadratic x² - 4x + 3 on [0, 5]", () => {
 });
 
 describe("optimizer - open interval handling", () => {
-  it("detects warning when result is near excluded endpoint", () => {
+  it("reports an unattained maximum when a linear function approaches an excluded endpoint", () => {
     const compiled = compileExpression("x", "x");
     const interval = { left: 0, right: 10, includeLeft: true, includeRight: false };
     const results = optimize(compiled, interval, "max", SMALL_CONFIG);
-    // Maximum of f(x)=x on [0,10) should be near 10
-    expect(results[0].bestX).toBeCloseTo(10, 0);
-    // Should have a warning about excluded endpoint
-    expect(results[0].warnings.length).toBeGreaterThanOrEqual(0);
+
+    expect(results[0].qualitativeResult?.title).toBe("无最大值");
+    expect(results[0].qualitativeResult?.xLabel).toBe("x → 10-");
+    expect(results[0].qualitativeResult?.fxLabel).toBe("f(x) → 10");
+  });
+
+  it("reports unattained quadratic bounds on a fully open interval", () => {
+    const compiled = compileExpression("x^2", "x");
+    const interval = { left: 0, right: 5, includeLeft: false, includeRight: false };
+    const results = optimize(compiled, interval, "both", SMALL_CONFIG);
+
+    expect(results[0].qualitativeResult?.title).toBe("无最大值");
+    expect(results[0].qualitativeResult?.xLabel).toBe("x → 5-");
+    expect(results[0].qualitativeResult?.fxLabel).toBe("f(x) → 25");
+    expect(results[1].qualitativeResult?.title).toBe("无最小值");
+    expect(results[1].qualitativeResult?.xLabel).toBe("x → 0+");
+    expect(results[1].qualitativeResult?.fxLabel).toBe("f(x) → 0");
+  });
+
+  it("keeps an attained interior minimum while reporting an unattained endpoint maximum", () => {
+    const compiled = compileExpression("x^2", "x");
+    const interval = { left: -1, right: 1, includeLeft: false, includeRight: false };
+    const results = optimize(compiled, interval, "both", SMALL_CONFIG);
+
+    expect(results[0].qualitativeResult?.title).toBe("无最大值");
+    expect(results[0].qualitativeResult?.fxLabel).toBe("f(x) → 1");
+    expect(results[1].qualitativeResult).toBeUndefined();
+    expect(results[1].bestX).toBeCloseTo(0, 1);
+    expect(results[1].bestFx).toBeCloseTo(0, 1);
+  });
+
+  it("keeps an attained shifted-parabola minimum even when the interval endpoints are open", () => {
+    const compiled = compileExpression("(x - 2)^2", "x");
+    const interval = { left: 0, right: 5, includeLeft: false, includeRight: false };
+    const results = optimize(compiled, interval, "both", SMALL_CONFIG);
+
+    expect(results[0].qualitativeResult?.title).toBe("无最大值");
+    expect(results[0].qualitativeResult?.xLabel).toBe("x → 5-");
+    expect(results[0].qualitativeResult?.fxLabel).toBe("f(x) → 9");
+    expect(results[1].qualitativeResult).toBeUndefined();
+    expect(results[1].bestX).toBeCloseTo(2, 1);
+    expect(results[1].bestFx).toBeCloseTo(0, 1);
   });
 });
 

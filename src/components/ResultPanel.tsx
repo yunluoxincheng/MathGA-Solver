@@ -1,7 +1,7 @@
 "use client";
 
 import { OptimizationResult } from "@/types";
-import { formatRadiansAsPi } from "@/lib/math/interval";
+import { formatRadiansAsPi, normalizeDisplayZero } from "@/lib/math/interval";
 
 interface ResultPanelProps {
   results: OptimizationResult[];
@@ -124,5 +124,8 @@ function formatXValue(n: number, piUnit: boolean): string {
 }
 
 function formatNumber(n: number): string {
-  return Number.isInteger(n) ? n.toString() : n.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+  const normalizedValue = normalizeDisplayZero(n, 5e-7);
+  return Number.isInteger(normalizedValue)
+    ? normalizedValue.toString()
+    : normalizedValue.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
 }
