@@ -186,6 +186,19 @@ describe("equation solver - endpoint roots", () => {
     expect(result.rootX).toBeNull();
     expect(result.warnings.some((w) => w.includes("左端点"))).toBe(true);
   });
+
+  it("accepts legitimate interior root near excluded endpoint: x - 0.0001 = 0 on (0, 5]", () => {
+    const result = solveEquation(
+      makeLeftDef("linear", { a: 1, b: -0.0001 }),
+      0,
+      null,
+      { left: 0, right: 5, includeLeft: false, includeRight: true },
+      { gaConfig: SMALL_CONFIG }
+    );
+
+    expect(result.rootX).not.toBeNull();
+    expect(result.rootX!).toBeCloseTo(0.0001, 2);
+  });
 });
 
 // 5.5 Identity-like equations

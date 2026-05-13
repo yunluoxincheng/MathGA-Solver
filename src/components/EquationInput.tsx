@@ -61,8 +61,8 @@ export default function EquationInput({ value, onChange }: EquationInputProps) {
     (raw: string) => {
       setConstantRaw(raw);
       if (raw === "" || raw === "-") return;
-      const num = parseFloat(raw);
-      if (!isNaN(num)) {
+      const num = Number(raw);
+      if (Number.isFinite(num)) {
         onChange({ ...value, right: { type: "constant", value: num } });
       }
     },
@@ -110,7 +110,7 @@ export default function EquationInput({ value, onChange }: EquationInputProps) {
     (value.right.type === "expression" && isTrigSide(value.right.definition));
 
   const constantInvalid =
-    rightMode === "constant" && constantRaw !== null && constantRaw !== "" && constantRaw !== "-" && isNaN(parseFloat(constantRaw));
+    rightMode === "constant" && constantRaw !== null && constantRaw !== "" && constantRaw !== "-" && !Number.isFinite(Number(constantRaw));
 
   return (
     <div className="space-y-4">

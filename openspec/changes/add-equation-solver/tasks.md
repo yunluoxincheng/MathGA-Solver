@@ -41,5 +41,5 @@
 - [x] 5.4 Add tests for roots at included endpoints and no accepted root at excluded endpoints.
 - [x] 5.5 Add tests for identity-like equations such as `x = x` or `0 = 0` to verify many-solution warning behavior.
 - [x] 5.6 Add tests that make equation solving deterministic through fixed sampling, local refinement, or injected randomness.
-- [x] 5.7 Add component or integration tests for equation input preview, two-sided pi-unit behavior, and mode switching where practical.
+- [x] 5.7 Add integration tests for equation expression compilation, preview generation, theta variable mapping, and two-sided expression construction. (Mode switching UI not covered — jest config uses node environment without jsdom for component rendering.)
 - [x] 5.8 Run `npm run test`, `npm run typecheck`, `npm run lint`, and `npm run build`.

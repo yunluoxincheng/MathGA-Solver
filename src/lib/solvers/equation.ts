@@ -129,6 +129,39 @@ function detectManySolutions(
   return distinct.size >= 3;
 }
 
+function checkExcludedEndpointRoot(
+  leftFn: CompiledFunction,
+  rightFn: CompiledFunction,
+  interval: Interval,
+  best: ResidualCandidate,
+  tolerance: number
+): string | null {
+  const range = interval.right - interval.left;
+
+  if (!interval.includeLeft) {
+    const endpointResidual = evaluateResidual(leftFn, rightFn, interval.left);
+    if (endpointResidual !== null && endpointResidual <= tolerance) {
+      // Endpoint is a root. Check if best candidate is converging toward it.
+      const distance = Math.abs(best.x - interval.left);
+      if (distance < range * 1e-3 && best.residual > endpointResidual) {
+        return "唯一精确根位于被排除的左端点，区间内无有效根。";
+      }
+    }
+  }
+
+  if (!interval.includeRight) {
+    const endpointResidual = evaluateResidual(leftFn, rightFn, interval.right);
+    if (endpointResidual !== null && endpointResidual <= tolerance) {
+      const distance = Math.abs(best.x - interval.right);
+      if (distance < range * 1e-3 && best.residual > endpointResidual) {
+        return "唯一精确根位于被排除的右端点，区间内无有效根。";
+      }
+    }
+  }
+
+  return null;
+}
+
 export interface SolveEquationOptions {
   gaConfig?: GAConfig;
   tolerance?: number;
@@ -215,22 +248,14 @@ export function solveEquation(
     };
   }
 
-  // Reject candidates too close to excluded endpoints
-  const range = interval.right - interval.left;
-  const boundaryThreshold = range * 1e-4;
-  if (!interval.includeLeft && Math.abs(best.x - interval.left) < boundaryThreshold) {
-    warnings.push("最优候选值接近被排除的左端点，无法确认为区间内的有效根。");
-    return {
-      rootX: null,
-      residual: best.residual,
-      generations: gaResult.generations,
-      earlyStopped: gaResult.earlyStopped,
-      warnings,
-      history: gaResult.history,
-    };
-  }
-  if (!interval.includeRight && Math.abs(best.x - interval.right) < boundaryThreshold) {
-    warnings.push("最优候选值接近被排除的右端点，无法确认为区间内的有效根。");
+  // Reject candidates that are essentially standing in for an excluded endpoint root.
+  // Only reject when: the excluded endpoint itself has low residual (is a root),
+  // AND the best candidate is converging toward that endpoint.
+  const excludedEndpointCheck = checkExcludedEndpointRoot(
+    leftFn, rightFn, interval, best, tolerance
+  );
+  if (excludedEndpointCheck) {
+    warnings.push(excludedEndpointCheck);
     return {
       rootX: null,
       residual: best.residual,
