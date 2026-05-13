@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   EquationDefinition,
   FunctionDefinition,
@@ -24,6 +24,7 @@ const DEFAULT_RIGHT_EXPRESSION: FunctionDefinition = {
 export default function EquationInput({ value, onChange }: EquationInputProps) {
   const rightMode: RightSideMode =
     value.right.type === "constant" ? "constant" : "expression";
+  const [constantRaw, setConstantRaw] = useState<string | null>(null);
 
   const handleLeftChange = useCallback(
     (left: FunctionDefinition) => {
@@ -40,6 +41,7 @@ export default function EquationInput({ value, onChange }: EquationInputProps) {
 
   const handleRightModeChange = useCallback(
     (mode: RightSideMode) => {
+      setConstantRaw(null);
       if (mode === "constant") {
         onChange({ ...value, right: { type: "constant", value: 0 } });
       } else {
@@ -57,14 +59,23 @@ export default function EquationInput({ value, onChange }: EquationInputProps) {
 
   const handleConstantChange = useCallback(
     (raw: string) => {
+      setConstantRaw(raw);
+      if (raw === "" || raw === "-") return;
       const num = parseFloat(raw);
-      onChange({
-        ...value,
-        right: { type: "constant", value: isNaN(num) ? 0 : num },
-      });
+      if (!isNaN(num)) {
+        onChange({ ...value, right: { type: "constant", value: num } });
+      }
     },
     [onChange, value]
   );
+
+  const handleConstantBlur = useCallback(() => {
+    const raw = constantRaw;
+    if (raw === "" || raw === "-") {
+      setConstantRaw("0");
+      onChange({ ...value, right: { type: "constant", value: 0 } });
+    }
+  }, [constantRaw, onChange, value]);
 
   const handleRightExpressionChange = useCallback(
     (def: FunctionDefinition) => {
@@ -97,6 +108,9 @@ export default function EquationInput({ value, onChange }: EquationInputProps) {
   const showPiAffordance =
     isTrigSide(value.left) ||
     (value.right.type === "expression" && isTrigSide(value.right.definition));
+
+  const constantInvalid =
+    rightMode === "constant" && constantRaw !== null && constantRaw !== "" && constantRaw !== "-" && isNaN(parseFloat(constantRaw));
 
   return (
     <div className="space-y-4">
@@ -148,11 +162,16 @@ export default function EquationInput({ value, onChange }: EquationInputProps) {
                 id="right-constant"
                 type="number"
                 step="any"
-                value={value.right.type === "constant" ? value.right.value : 0}
+                value={constantRaw ?? (value.right.type === "constant" ? value.right.value : 0)}
                 onChange={(e) => handleConstantChange(e.target.value)}
-                className="w-full border border-border rounded-lg px-3 py-2 bg-bg-card text-text
-                  focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors duration-200"
+                onBlur={handleConstantBlur}
+                className={`w-full border rounded-lg px-3 py-2 bg-bg-card text-text
+                  focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors duration-200
+                  ${constantInvalid ? "border-error" : "border-border"}`}
               />
+              {constantInvalid && (
+                <p className="text-xs text-error mt-1">请输入有效数值</p>
+              )}
             </div>
           ) : (
             value.right.type === "expression" && (

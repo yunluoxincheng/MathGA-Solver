@@ -128,18 +128,19 @@ describe("equation solver - residual and invalid cases", () => {
     expect(result.warnings.length).toBeGreaterThan(0);
   });
 
-  it("returns no result when expression has no valid candidates", () => {
+  it("returns no-result state when expression evaluates invalid everywhere", () => {
     const result = solveEquation(
-      makeLeftDef("custom", {}, "x", "1/(x-5) + 1/(x+5)"),
+      makeLeftDef("custom", {}, "x", "sqrt(-1)"),
       0,
       null,
-      { left: 4, right: 6, includeLeft: false, includeRight: false },
-      { gaConfig: SMALL_CONFIG, deterministicSamples: 5 }
+      closedInterval(1, 5),
+      { gaConfig: SMALL_CONFIG }
     );
 
-    // Should handle gracefully - may find a solution or may not
-    expect(result).toBeDefined();
-    expect(result.generations).toBeGreaterThanOrEqual(0);
+    expect(result.rootX).toBeNull();
+    expect(result.residual).toBe(Infinity);
+    expect(result.warnings.length).toBeGreaterThan(0);
+    expect(result.warnings.some((w) => w.includes("有效"))).toBe(true);
   });
 });
 
@@ -168,11 +169,22 @@ describe("equation solver - endpoint roots", () => {
       { gaConfig: SMALL_CONFIG }
     );
 
-    // The root is at x=0 which is excluded. Solver may find a near-zero residual
-    // near the excluded endpoint or report above tolerance.
-    if (result.rootX !== null) {
-      expect(result.rootX).toBeGreaterThan(0);
-    }
+    // Root at x=0 is excluded; no root exists inside (0, 5]
+    expect(result.rootX).toBeNull();
+    expect(result.warnings.length).toBeGreaterThan(0);
+  });
+
+  it("does not accept excluded endpoint for flat equation: x^2 = 0 on (0, 5]", () => {
+    const result = solveEquation(
+      makeLeftDef("quadratic", { a: 1, b: 0, c: 0 }),
+      0,
+      null,
+      { left: 0, right: 5, includeLeft: false, includeRight: true },
+      { gaConfig: SMALL_CONFIG }
+    );
+
+    expect(result.rootX).toBeNull();
+    expect(result.warnings.some((w) => w.includes("左端点"))).toBe(true);
   });
 });
 
@@ -234,6 +246,38 @@ describe("equation solver - deterministic behavior", () => {
   });
 });
 
-// 5.7 Component-level tests are covered by type checking and build verification.
-// The equation preview, pi-unit behavior, and mode switching are verified
-// through the TypeScript compiler and successful production build.
+// 5.7 Integration: equation input preview and mode switching
+import { compileExpression } from "@/lib/math/evaluate";
+import { buildExpression, buildPreview } from "@/lib/math/templates";
+
+describe("equation input preview and mode switching", () => {
+  it("builds correct expression for quadratic left side with constant right side", () => {
+    const expr = buildExpression("quadratic", { a: 1, b: 0, c: -4 }, "x");
+    expect(expr).toBeTruthy();
+    const compiled = compileExpression(expr, "x");
+    expect(compiled.valid).toBe(true);
+    expect(compiled.evaluate(2)).toBeCloseTo(0);
+    expect(compiled.evaluate(-2)).toBeCloseTo(0);
+  });
+
+  it("builds matching preview for both sides", () => {
+    const leftPreview = buildPreview("quadratic", { a: 1, b: 0, c: -4 }, "x");
+    expect(leftPreview).toContain("x");
+    const rightPreview = buildPreview("linear", { a: 2, b: 0 }, "x");
+    expect(rightPreview).toContain("x");
+  });
+
+  it("compiles theta variable correctly for both sides", () => {
+    const leftExpr = buildExpression("sine", { a: 1, b: 1, c: 0, d: 0 }, "theta");
+    const rightExpr = buildExpression("cosine", { a: 1, b: 1, c: 0, d: 0 }, "theta");
+    const leftCompiled = compileExpression(leftExpr, "theta");
+    const rightCompiled = compileExpression(rightExpr, "theta");
+    expect(leftCompiled.valid).toBe(true);
+    expect(rightCompiled.valid).toBe(true);
+  });
+
+  it("theta preview displays as θ", () => {
+    const preview = buildPreview("sine", { a: 1, b: 1, c: 0, d: 0 }, "θ");
+    expect(preview).toContain("θ");
+  });
+});

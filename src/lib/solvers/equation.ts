@@ -215,6 +215,32 @@ export function solveEquation(
     };
   }
 
+  // Reject candidates too close to excluded endpoints
+  const range = interval.right - interval.left;
+  const boundaryThreshold = range * 1e-4;
+  if (!interval.includeLeft && Math.abs(best.x - interval.left) < boundaryThreshold) {
+    warnings.push("最优候选值接近被排除的左端点，无法确认为区间内的有效根。");
+    return {
+      rootX: null,
+      residual: best.residual,
+      generations: gaResult.generations,
+      earlyStopped: gaResult.earlyStopped,
+      warnings,
+      history: gaResult.history,
+    };
+  }
+  if (!interval.includeRight && Math.abs(best.x - interval.right) < boundaryThreshold) {
+    warnings.push("最优候选值接近被排除的右端点，无法确认为区间内的有效根。");
+    return {
+      rootX: null,
+      residual: best.residual,
+      generations: gaResult.generations,
+      earlyStopped: gaResult.earlyStopped,
+      warnings,
+      history: gaResult.history,
+    };
+  }
+
   return {
     rootX: best.x,
     residual: best.residual,
