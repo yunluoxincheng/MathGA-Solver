@@ -11,5 +11,4 @@ coverage/
 *.tsbuildinfo
 design-system
 遗传算法数学求解器开发规划.md
-openspec/
 .agents/
