@@ -8,8 +8,12 @@ The project has completed the function optimization MVP and already exposes Equa
 - Let users define the left side of an equation through the same template-first function input flow used by optimization.
 - Let users define the right side as either a numeric constant or another template-based expression.
 - Convert `left(x) = right(x)` into an error objective `abs(left(x) - right(x))` and minimize that error with the existing GA infrastructure.
+- Use an equation-specific residual tolerance, initially `1e-6`, to classify accepted approximate roots separately from best candidates.
+- Explicitly evaluate included interval endpoints and keep open endpoints excluded during equation solving.
+- Make equation solver behavior testable with deterministic pre-checks or injectable randomness so simple root tests do not depend on chance.
 - Display the approximate solution, residual error, generation metadata, warnings, and the standard numerical-approximation disclaimer.
 - Enable the existing `方程求解` navigation mode when the new flow is available.
+- Warn when the equation appears to have multiple or infinitely many solutions in the interval instead of implying that one returned point is the complete solution set.
 - Keep multi-root search, inequalities, fitting, inverse problems, and geometry optimization out of this change.
 
 ## Capabilities
@@ -31,4 +35,5 @@ The project has completed the function optimization MVP and already exposes Equa
 - Updates `src/components/SolverPage.tsx` to support switching between function optimization and equation solving.
 - Extends shared types in `src/types/index.ts`.
 - Adds focused tests for equation solving, expression construction, invalid input, and residual reporting.
+- Adds tests for endpoint roots, deterministic solving behavior, residual tolerance classification, and identity/many-solution messaging.
 - No new runtime dependency is expected; existing `mathjs`, GA utilities, interval handling, and chart/plot infrastructure should be reused where appropriate.

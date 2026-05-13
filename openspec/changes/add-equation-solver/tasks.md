@@ -3,8 +3,12 @@
 - [ ] 1.1 Add equation-side and equation-result types to `src/types/index.ts`.
 - [ ] 1.2 Implement equation objective evaluation that compiles and evaluates both sides with one shared variable.
 - [ ] 1.3 Implement `src/lib/solvers/equation.ts` using the existing GA engine to minimize residual error.
-- [ ] 1.4 Add residual tolerance handling so accepted roots and best-candidate/no-accurate-root states are distinct.
-- [ ] 1.5 Preserve safe evaluation behavior for invalid, infinite, or undefined equation-side values.
+- [ ] 1.4 Define an equation-specific residual tolerance, initially `1e-6`, separately from GA early-stop tolerance.
+- [ ] 1.5 Add residual tolerance handling so accepted roots and best-candidate/no-accurate-root states are distinct.
+- [ ] 1.6 Explicitly evaluate included interval endpoints as candidate roots while excluding open endpoints.
+- [ ] 1.7 Add deterministic pre-checks, local refinement, or injectable randomness so equation solver tests do not depend on chance GA convergence.
+- [ ] 1.8 Preserve safe evaluation behavior for invalid, infinite, or undefined equation-side values.
+- [ ] 1.9 Detect identity-like or many-solution cases well enough to warn users without claiming all roots were found.
 
 ## 2. Equation Input UI
 
@@ -12,6 +16,7 @@
 - [ ] 2.2 Support right-side constant input and right-side template/custom expression input.
 - [ ] 2.3 Render a friendly equation preview from the left side, equals sign, and right side.
 - [ ] 2.4 Keep both equation sides tied to the same selected variable, including `θ` to `theta` internal mapping.
+- [ ] 2.5 Derive trigonometric/pi-unit controls from both equation sides so a right-side sine/cosine expression receives the same interval affordances.
 
 ## 3. Mode Integration
 
@@ -24,13 +29,17 @@
 
 - [ ] 4.1 Add equation result rendering for approximate root, residual error, generation count, and early-stop state.
 - [ ] 4.2 Display a warning when the best residual is above tolerance.
-- [ ] 4.3 Display a no-result/error state for invalid equation inputs or no valid candidates.
-- [ ] 4.4 Include approximation wording that makes clear the result is numerical and not symbolic.
+- [ ] 4.3 Display a warning when the equation appears to have multiple or infinitely many solutions in the interval.
+- [ ] 4.4 Display a no-result/error state for invalid equation inputs or no valid candidates.
+- [ ] 4.5 Include approximation wording that makes clear the result is numerical and not symbolic.
 
 ## 5. Tests and Verification
 
 - [ ] 5.1 Add unit tests for equation solving on simple equations such as `x^2 - 4 = 0`.
 - [ ] 5.2 Add tests for multiple-root intervals to confirm the solver reports only one candidate.
 - [ ] 5.3 Add tests for residual-above-tolerance and invalid-expression/no-valid-candidate cases.
-- [ ] 5.4 Add component or integration tests for equation input preview and mode switching where practical.
-- [ ] 5.5 Run `npm run test`, `npm run typecheck`, `npm run lint`, and `npm run build`.
+- [ ] 5.4 Add tests for roots at included endpoints and no accepted root at excluded endpoints.
+- [ ] 5.5 Add tests for identity-like equations such as `x = x` or `0 = 0` to verify many-solution warning behavior.
+- [ ] 5.6 Add tests that make equation solving deterministic through fixed sampling, local refinement, or injected randomness.
+- [ ] 5.7 Add component or integration tests for equation input preview, two-sided pi-unit behavior, and mode switching where practical.
+- [ ] 5.8 Run `npm run test`, `npm run typecheck`, `npm run lint`, and `npm run build`.

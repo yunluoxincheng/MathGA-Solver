@@ -23,6 +23,11 @@ The system SHALL evaluate both equation sides with the same selected variable.
 - **WHEN** the equation variable displays as `θ`
 - **THEN** both equation sides are evaluated internally using `theta`
 
+#### Scenario: Right side uses trigonometric template
+- **WHEN** either equation side uses a sine or cosine template with `θ`
+- **THEN** equation interval controls offer the same pi-unit affordance used for trigonometric optimization inputs
+- **THEN** both equation sides use the same internal `theta` binding
+
 ### Requirement: Equation preview display
 The system SHALL display a readable equation preview assembled from the left and right sides.
 

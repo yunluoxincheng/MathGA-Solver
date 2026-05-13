@@ -5,11 +5,13 @@ The system SHALL use structured interval input to define the search range for eq
 
 #### Scenario: Equation uses closed interval
 - **WHEN** the user enters interval `[-10, 10]` for equation solving
-- **THEN** the solver searches candidate roots within that interval and may include both endpoints
+- **THEN** the solver searches candidate roots within that interval
+- **THEN** the solver explicitly evaluates both included endpoints as possible root candidates
 
 #### Scenario: Equation uses open interval
 - **WHEN** the user enters interval `(0, 5)` for equation solving
 - **THEN** the solver searches candidate roots strictly inside the interval
+- **THEN** the solver does not accept either excluded endpoint as a root candidate
 
 ### Requirement: Equation interval validation
 The system SHALL validate the equation search interval before compiling and solving the equation.

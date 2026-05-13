@@ -12,6 +12,11 @@ The system SHALL display equation-solving output as approximate numerical result
 - **THEN** the system displays a warning that no sufficiently accurate root was found
 - **THEN** the system may display the best candidate and residual for reference
 
+#### Scenario: Equation may have many solutions
+- **WHEN** equation solving detects identity-like or many-solution behavior
+- **THEN** the system displays a warning that the returned candidate is not the complete solution set
+- **THEN** the system does not label the result as a unique root
+
 ### Requirement: Equation metadata display
 The system SHALL display equation solver metadata using the same result-panel conventions as optimization results.
 
