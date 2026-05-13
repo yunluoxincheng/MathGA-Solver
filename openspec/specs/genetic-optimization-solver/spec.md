@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Implement a real-coded genetic algorithm engine for numerical function optimization.
+
+## Requirements
 
 ### Requirement: Real-coded genetic algorithm
 The system SHALL use real-number individuals for one-variable optimization.

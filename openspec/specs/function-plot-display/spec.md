@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Render the objective function curve over the search interval with markers for optimization results.
+
+## Requirements
 
 ### Requirement: Function curve display
 The system SHALL display a sampled function curve for the function and interval used by the last completed solve.

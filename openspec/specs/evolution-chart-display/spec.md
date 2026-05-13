@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Display generation-by-generation convergence history for genetic algorithm runs.
+
+## Requirements
 
 ### Requirement: Evolution history display
 The system SHALL display genetic algorithm convergence history for the last completed finite optimization solve.
