@@ -97,6 +97,26 @@ export interface TemplateParameter {
   nonZero?: boolean;
 }
 
+export type EquationRightSide =
+  | { type: "constant"; value: number }
+  | { type: "expression"; definition: FunctionDefinition };
+
+export interface EquationDefinition {
+  left: FunctionDefinition;
+  right: EquationRightSide;
+}
+
+export const DEFAULT_EQUATION_RESIDUAL_TOLERANCE = 1e-6;
+
+export interface EquationResult {
+  rootX: number | null;
+  residual: number;
+  generations: number;
+  earlyStopped: boolean;
+  warnings: string[];
+  history?: GenerationStats[];
+}
+
 export interface VisualizationSnapshot {
   compiledFn: (x: number) => number | null;
   solvedInterval: Interval;

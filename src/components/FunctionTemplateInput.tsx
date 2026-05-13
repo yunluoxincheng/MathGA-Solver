@@ -7,6 +7,7 @@ import { getAllTemplates, buildPreview } from "@/lib/math/templates";
 interface FunctionTemplateInputProps {
   value: FunctionDefinition;
   onChange: (def: FunctionDefinition) => void;
+  hideVariable?: boolean;
 }
 
 const VARIABLE_OPTIONS: { value: VariableName; label: string }[] = [
@@ -17,6 +18,7 @@ const VARIABLE_OPTIONS: { value: VariableName; label: string }[] = [
 export default function FunctionTemplateInput({
   value,
   onChange,
+  hideVariable = false,
 }: FunctionTemplateInputProps) {
   const [openSelect, setOpenSelect] = useState<"template" | "variable" | null>(null);
   const [paramRawValues, setParamRawValues] = useState<Record<string, string>>({});
@@ -83,7 +85,7 @@ export default function FunctionTemplateInput({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_8rem] gap-3">
+      <div className={`grid gap-3 ${hideVariable ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-[minmax(0,1fr)_8rem]"}`}>
         <div>
           <label id="template-select-label" className="block text-sm font-semibold mb-1.5">
             函数模板
@@ -99,22 +101,24 @@ export default function FunctionTemplateInput({
           />
         </div>
 
-        <div>
-          <label id="variable-select-label" className="block text-sm font-semibold mb-1.5">
-            变量
-          </label>
-          <StyledSelect
-            labelledBy="variable-select-label"
-            open={openSelect === "variable"}
-            onOpenChange={(open) => setOpenSelect(open ? "variable" : null)}
-            value={value.variable}
-            displayValue={
-              VARIABLE_OPTIONS.find((option) => option.value === value.variable)?.label ?? "x"
-            }
-            options={VARIABLE_OPTIONS}
-            onChange={(nextValue) => handleVariableChange(nextValue as VariableName)}
-          />
-        </div>
+        {!hideVariable && (
+          <div>
+            <label id="variable-select-label" className="block text-sm font-semibold mb-1.5">
+              变量
+            </label>
+            <StyledSelect
+              labelledBy="variable-select-label"
+              open={openSelect === "variable"}
+              onOpenChange={(open) => setOpenSelect(open ? "variable" : null)}
+              value={value.variable}
+              displayValue={
+                VARIABLE_OPTIONS.find((option) => option.value === value.variable)?.label ?? "x"
+              }
+              options={VARIABLE_OPTIONS}
+              onChange={(nextValue) => handleVariableChange(nextValue as VariableName)}
+            />
+          </div>
+        )}
       </div>
 
       {value.templateId === "custom" ? (
