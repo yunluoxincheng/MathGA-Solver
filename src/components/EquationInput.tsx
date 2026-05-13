@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   EquationDefinition,
   FunctionDefinition,
@@ -11,6 +11,7 @@ import { buildPreview } from "@/lib/math/templates";
 interface EquationInputProps {
   value: EquationDefinition;
   onChange: (def: EquationDefinition) => void;
+  onValidChange?: (valid: boolean) => void;
 }
 
 type RightSideMode = "constant" | "expression";
@@ -21,7 +22,7 @@ const DEFAULT_RIGHT_EXPRESSION: FunctionDefinition = {
   parameters: { a: 1, b: 0 },
 };
 
-export default function EquationInput({ value, onChange }: EquationInputProps) {
+export default function EquationInput({ value, onChange, onValidChange }: EquationInputProps) {
   const rightMode: RightSideMode =
     value.right.type === "constant" ? "constant" : "expression";
   const [constantRaw, setConstantRaw] = useState<string | null>(null);
@@ -111,6 +112,10 @@ export default function EquationInput({ value, onChange }: EquationInputProps) {
 
   const constantInvalid =
     rightMode === "constant" && constantRaw !== null && constantRaw !== "" && constantRaw !== "-" && !Number.isFinite(Number(constantRaw));
+
+  useEffect(() => {
+    onValidChange?.(!constantInvalid);
+  }, [constantInvalid, onValidChange]);
 
   return (
     <div className="space-y-4">

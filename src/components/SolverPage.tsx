@@ -70,6 +70,7 @@ export default function SolverPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [vizSnapshot, setVizSnapshot] = useState<VisualizationSnapshot | null>(null);
+  const [equationInputValid, setEquationInputValid] = useState(true);
 
   const isTrigTemplate =
     mode === "optimize"
@@ -261,7 +262,7 @@ export default function SolverPage() {
               <>
                 <section className="border border-border rounded-xl p-5 bg-bg-card">
                   <h2 className="text-lg font-bold mb-4">方程定义</h2>
-                  <EquationInput value={eqDef} onChange={handleEquationChange} />
+                  <EquationInput value={eqDef} onChange={handleEquationChange} onValidChange={setEquationInputValid} />
                 </section>
 
                 <section className="border border-border rounded-xl p-5 bg-bg-card">
@@ -280,7 +281,7 @@ export default function SolverPage() {
             <button
               type="button"
               onClick={handleSolve}
-              disabled={loading}
+              disabled={loading || (mode === "equation" && !equationInputValid)}
               className="w-full py-3 rounded-lg font-bold text-white transition-colors duration-200 cursor-pointer
                 bg-cta hover:bg-cta-dark disabled:opacity-60 disabled:cursor-not-allowed"
             >
